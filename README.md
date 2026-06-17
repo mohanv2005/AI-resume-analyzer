@@ -11,7 +11,7 @@ An AI-powered tool to analyze resumes against job descriptions, extract skills, 
 
 ## Progress Checklist
 - [x] FastAPI project setup
-- [ ] File upload endpoint
+- [x] File upload endpoint
 - [ ] PDF text extraction
 - [ ] Resume parsing
 - [ ] Skill extraction
@@ -19,19 +19,3 @@ An AI-powered tool to analyze resumes against job descriptions, extract skills, 
 - [ ] AI suggestions
 - [ ] Frontend UI
 - [ ] Deployment
-
-## Installation
-```bash
-git clone <your-repo-url>
-cd ai-resume-analyzer
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-## API Endpoints
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Root info |
-| GET | `/health` | Health check |
