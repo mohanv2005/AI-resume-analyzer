@@ -12,3 +12,12 @@ class UploadResponse(BaseModel):
 class ErrorResponse(BaseModel):
     error: str              
     detail: str             
+
+class ExtractResponse(BaseModel):
+    filename: str
+    page_count: int
+    word_count: int
+    line_count: int
+    char_count: int
+    extracted_text: str         # The full cleaned text
+    message: str
