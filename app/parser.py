@@ -144,3 +144,62 @@ def get_text_stats(text: str) -> dict:
         "line_count": len(lines),
         "char_count": len(text)
     }
+
+def extract_email(text: str) -> Optional[str]:
+    """
+    Extracts the first email address found in the text using regex.
+
+    Args:
+        text: The cleaned text string
+    """
+    pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+    match = re.search(pattern, text)
+
+    if match:
+        return match.group().lower()
+    return None
+
+def extract_phone_number(text: str) -> Optional[str]:
+    """
+    Extracts the first phone number found in the text using regex.
+    Supports various formats, including international.
+
+    Args:
+        text: The cleaned text string
+    """
+    pattern = r"(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}"
+    match = re.search(pattern, text)
+
+    if match:
+        raw = match.group().strip()
+        return raw
+    return None
+
+def extract_github_link(text: str) -> Optional[str]:
+    """
+    Extracts the first GitHub link found in the text using regex.
+
+    Args:
+        text: The cleaned text string
+    """
+    pattern = r"(https?://)?(www\.)?github\.com/[\w\-]+"
+    match = re.search(pattern, text, re.IGNORECASE)
+
+    if match:
+        return match.group()
+    return None
+
+def extract_linkedin_link(text: str) -> Optional[str]:
+    """
+    Extracts the first LinkedIn link found in the text using regex.
+
+    Args:
+        text: The cleaned text string
+    """
+    pattern = r"(https?://)?(www\.)?linkedin\.com/in/[\w\-]+"
+    match = re.search(pattern, text, re.IGNORECASE)
+
+    if match:
+        return match.group()
+    return None
+
