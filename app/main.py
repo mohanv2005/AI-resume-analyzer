@@ -158,24 +158,46 @@ async def parse_resume_endpoint(file: UploadFile = File(...)):
 
     if file.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=400, detail="Only PDF files accepted.")
+    
+
 
     content = await file.read()
+
+
 
     if len(content) == 0:
         raise HTTPException(status_code=400, detail="File is empty.")
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File exceeds 5MB limit.")
+    
+
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     save_path = os.path.join(UPLOAD_DIR, file.filename)
     with open(save_path, "wb") as buffer:
         buffer.write(content)
 
+
+
     extraction = extract_text_from_pdf(save_path)
     if not extraction["success"]:
         raise HTTPException(status_code=400, detail=extraction["error"])
+    
+    
 
-    parsed = parse_resume(extraction["text"])
+
+    parsed = parse_resume(extraction["text"], file_path=save_path)
     parsed["message"] = "Resume parsed successfully"
 
-    return parsed
+    return ParsedResume(
+        name=parsed.get("name"),
+        email=parsed.get("email"),
+        phone=parsed.get("phone"),
+        linkedin=parsed.get("linkedin"),
+        github=parsed.get("github"),
+        skills_section=parsed.get("skills_section", ""),
+        experience_section=parsed.get("experience_section", ""),
+        education_section=parsed.get("education_section", ""),
+        raw_text=parsed.get("raw_text", ""),
+        message="Resume parsed successfully"
+    )

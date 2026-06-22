@@ -280,7 +280,7 @@ def extract_section(text: str, section_name: str) -> str:
     
     return "\n".join(section_lines).strip()
 
-def parse_resume(text: str) -> dict:
+def parse_resume(text: str, file_path: str = None) -> dict: 
     """
     Master function: extracts all structured information from resume text.
 
@@ -307,14 +307,73 @@ def parse_resume(text: str) -> dict:
             "raw_text": ""
         }
     
+    #source 1: extract from text
+    linkedin_from_text = extract_linkedin_link(text)
+    github_from_text = extract_github_link(text)
+
+    #source 2: extract from hyperlinks in PDF annotation layer
+    hyperlinks = {}
+    if file_path:
+        hyperlinks = extract_hyperlinks_from_pdf(file_path) 
+
+    final_linkedin = hyperlinks.get("linkedin") or linkedin_from_text
+    final_github = hyperlinks.get("github") or github_from_text
+    
     return{
         "name": extract_name(text),
         "email": extract_email(text),
         "phone": extract_phone_number(text),
-        "linkedin": extract_linkedin_link(text),
-        "github": extract_github_link(text),
+        "linkedin": final_linkedin,
+        "github": final_github,
         "skills_section": extract_section(text, "skills"),
         "experience_section": extract_section(text, "experience"),
         "education_section": extract_section(text, "education"),
         "raw_text": text
     }
+
+def extract_hyperlinks_from_pdf(file_path: str) -> dict:
+    """
+    Extracts hyperlinks from PDF annotation layer using regex.
+
+    Args:
+        file_path: Path to the PDF file
+
+    Returns:
+        Dictionary with linkedin and github URLs if found
+    """
+    result = {
+        "linkedin": None,
+        "github": None,
+        "other_links": []
+    }
+
+    if not os.path.exists(file_path):
+        return result
+    
+    try:
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                # print("Hyperlinks found:", page.hyperlinks)
+
+                for link in page.hyperlinks:
+                    uri = link.get("uri", "")
+
+                    if not uri:
+                        continue
+
+                    uri_lower = uri.lower()
+
+                    if "linkedin.com" in uri_lower and result["linkedin"] is None:
+                        result["linkedin"] = uri
+
+                    elif "github.com" in uri_lower and result["github"] is None:
+                        result["github"] = uri
+
+                    else:
+                        if uri not in result["other_links"]:
+                            result["other_links"].append(uri)
+    except Exception as e:
+        pass  # Ignore errors; return whatever found
+
+    return result
+
