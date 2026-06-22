@@ -3,8 +3,9 @@ import os
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.models import UploadResponse, ErrorResponse, ExtractResponse
-from app.parser import extract_text_from_pdf, get_text_stats
+from app.models import UploadResponse, ErrorResponse, ExtractResponse, ParsedResume
+from app.parser import extract_text_from_pdf, get_text_stats, parse_resume
+
 
 app = FastAPI(
     title="AI Resume Analyzer",
@@ -146,3 +147,35 @@ async def extract_text(file: UploadFile = File(...)):
         extracted_text=result["text"],
         message="Text extracted successfully"
     )
+
+
+@app.post("/parse-resume", response_model=ParsedResume)
+async def parse_resume_endpoint(file: UploadFile = File(...)):
+    """
+    Full pipeline: upload PDF → extract text → parse structured data.
+    Returns name, email, phone, LinkedIn, GitHub, and key sections.
+    """
+
+    if file.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(status_code=400, detail="Only PDF files accepted.")
+
+    content = await file.read()
+
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="File is empty.")
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File exceeds 5MB limit.")
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    save_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(save_path, "wb") as buffer:
+        buffer.write(content)
+
+    extraction = extract_text_from_pdf(save_path)
+    if not extraction["success"]:
+        raise HTTPException(status_code=400, detail=extraction["error"])
+
+    parsed = parse_resume(extraction["text"])
+    parsed["message"] = "Resume parsed successfully"
+
+    return parsed

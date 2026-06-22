@@ -21,3 +21,15 @@ class ExtractResponse(BaseModel):
     char_count: int
     extracted_text: str         # The full cleaned text
     message: str
+
+class ParsedResume(BaseModel):
+    name: Optional[str] = None         
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
+    skills_section: str = ""           
+    experience_section: str = ""
+    education_section: str = ""
+    raw_text: str = ""
+    message: str = ""

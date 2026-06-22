@@ -203,3 +203,118 @@ def extract_linkedin_link(text: str) -> Optional[str]:
         return match.group()
     return None
 
+def extract_name(text: str) -> Optional[str]:
+    """
+    Attempts to extract a name from the text.
+    This is a naive implementation and may not be accurate.
+
+    Args:
+        text: The cleaned text string
+    """
+    skip_words = {
+        "resume", "curriculum", "cv", "profile",
+        "summary", "objective", "skills", "experience"
+    }
+
+    name_pattern = r"^[A-Z][a-zA-Z]+(\s[A-Z][a-zA-Z]+){1,3}$" #naive implementaion not 100% accurate
+
+    lines = text.strip().split("\n")[:5]
+
+    for line in lines:
+        line = line.strip()
+
+        if not line:
+            continue
+
+        if "@" in line or "http" in line or re.search(r"\d{5,}", line):
+            continue
+
+        if re.match(name_pattern, line):
+            return line
+        
+    for line in lines:
+        if line .strip():
+            return line.strip()
+    
+    return None
+
+def extract_section(text: str, section_name: str) -> str:
+    """
+    Extracts a named section from resume text.
+
+    Strategy: Find the section header (e.g., "SKILLS"), then collect
+    all text until the next section header or end of document.
+
+    Args:
+        text: Full resume text
+        section_name: Section to find (e.g., "skills", "experience")
+
+    Returns:
+        The text content of that section, or empty string if not found
+    """
+    pattern = rf"(?i)^({section_name}[\w\s]*)$"
+
+    lines = text.split("\n")
+    section_lines = []
+    in_section = False
+
+    #commin section headers
+    section_headers = {
+        "experience", "education", "skills", "projects",
+        "certifications", "achievements", "summary", "objective",
+        "publications", "languages", "interests", "references",
+        "work experience", "technical skills", "professional experience"
+    }
+
+    for line in lines:
+        stripped = line.strip()
+
+        if re.match(pattern, stripped, re.IGNORECASE):
+            in_section = True
+            continue
+
+        if in_section:
+            if stripped.lower() in section_headers and stripped.lower() != section_name.lower():
+                break
+            section_lines.append(stripped)
+    
+    return "\n".join(section_lines).strip()
+
+def parse_resume(text: str) -> dict:
+    """
+    Master function: extracts all structured information from resume text.
+
+    This is the function that main.py will call.
+    It combines all individual extractors into one result.
+
+    Args:
+        text: Cleaned text from extract_text_from_pdf()
+
+    Returns:
+        Dictionary with all extracted fields
+    """
+
+    if not text:
+        return {
+            "name": None,
+            "email": None,
+            "phone": None,
+            "linkedin": None,
+            "github": None,
+            "skills_section": "",
+            "experience_section": "",
+            "education_section": "",
+            "raw_text": ""
+        }
+    
+    return{
+        "name": extract_name(text),
+        "email": extract_email(text),
+        "phone": extract_phone_number(text),
+        "linkedin": extract_linkedin_link(text),
+        "github": extract_github_link(text),
+        "skills_section": extract_section(text, "skills"),
+        "experience_section": extract_section(text, "experience"),
+        "education_section": extract_section(text, "education"),
+        "raw_text": text
+    }
