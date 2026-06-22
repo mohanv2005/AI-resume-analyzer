@@ -12,7 +12,7 @@ An AI-powered tool to analyze resumes against job descriptions, extract skills, 
 ## Progress Checklist
 - [x] FastAPI project setup
 - [x] File upload endpoint
-- [ ] PDF text extraction
+- [x] PDF text extraction
 - [ ] Resume parsing
 - [ ] Skill extraction
 - [ ] JD matching algorithm
