@@ -1,8 +1,12 @@
+
+# master skills database.
+
 SKILLS_DB = {
     "languages": [
         "python", "javascript", "typescript", "java", "c", "c++", "c#",
         "go", "rust", "ruby", "php", "swift", "kotlin", "scala", "r",
-        "matlab", "perl", "bash", "shell", "powershell"
+        "matlab", "perl", "bash", "shell", "powershell",
+        "dart", "elixir", "haskell", "lua"
     ],
 
     "web_frameworks": [
@@ -36,17 +40,33 @@ SKILLS_DB = {
 
     "tools": [
         "git", "github", "gitlab", "bitbucket", "jira", "confluence",
-        "postman", "figma", "linux", "vim", "vscode", "unity", "blender"
+        "postman", "figma", "vim", "vscode", "unity", "blender"
     ],
 
     "concepts": [
         "rest api", "graphql", "microservices", "ci/cd", "agile", "scrum",
         "oop", "object oriented", "data structures", "algorithms",
         "system design", "api design", "test driven development", "tdd"
+    ],
+
+    "frontend": [
+        "html", "css", "sass", "scss", "tailwind", "bootstrap",
+        "redux", "webpack", "vite", "jquery"
+    ],
+
+    "testing": [
+        "pytest", "unittest", "jest", "mocha", "cypress", "selenium",
+        "junit", "testng"
+    ],
+
+    "mobile": [
+        "react native", "flutter", "android", "ios", "xamarin"
     ]
 }
 
-
+# Aliases:
+# Key = what might appear in a resume
+# Value = the canonical skill name in our DB
 SKILL_ALIASES = {
     "js":            "javascript",
     "ts":            "typescript",
@@ -67,21 +87,24 @@ SKILL_ALIASES = {
     "golang":        "go",
 }
 
-def get_all_skills():
+
+def get_all_skills() -> set:
     """
     Flattens SKILLS_DB into a single set of all known skills.
+    Used for fast lookup during matching.
 
     Returns:
         A set of all skill strings (lowercase)
     """
-
     all_skills = set()
+
     for category, skill_list in SKILLS_DB.items():
         all_skills.update(skill_list)
 
     all_skills.update(SKILL_ALIASES.keys())
 
     return all_skills
+
 
 def normalize_skill(skill: str) -> str:
     """
@@ -100,9 +123,11 @@ def normalize_skill(skill: str) -> str:
 
     return SKILL_ALIASES.get(normalized, normalized)
 
+
 def get_skill_category(skill: str) -> str:
     """
     Given a skill, returns which category it belongs to.
+    Useful for generating category-level feedback.
 
     Args:
         skill: Normalized skill string
