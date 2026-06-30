@@ -4,7 +4,7 @@ Run with: pytest tests/test_skills.py -v
 """
 
 import pytest
-from app.skills import get_all_skills, normalize_skill, get_skill_category
+from app.skills import SKILLS_DB, get_all_skills, normalize_skill, get_skill_category
 
 
 class TestGetAllSkills:
@@ -55,3 +55,15 @@ class TestGetSkillCategory:
 
     def test_unknown_skill_returns_other(self):
         assert get_skill_category("nonexistent_skill_xyz") == "other"
+
+    class TestSkillsDBIntegrity:
+
+      def test_no_skill_appears_in_multiple_categories(self):
+        seen = {}
+        duplicates = []
+        for category, skills in SKILLS_DB.items():
+            for skill in skills:
+                if skill in seen:
+                    duplicates.append((skill, seen[skill], category))
+                seen[skill] = category
+        assert duplicates == [], f"Duplicate skills found: {duplicates}"
