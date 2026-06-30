@@ -3,8 +3,10 @@ import os
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.models import UploadResponse, ErrorResponse, ExtractResponse, ParsedResume
+from app.models import UploadResponse, ErrorResponse, ExtractResponse, ParsedResume, SkillExtractionResponse
 from app.parser import extract_text_from_pdf, get_text_stats, parse_resume
+from app.matcher import extract_skills_from_text, extract_skills_from_section, calculate_match
+
 
 
 app = FastAPI(
@@ -200,4 +202,50 @@ async def parse_resume_endpoint(file: UploadFile = File(...)):
         education_section=parsed.get("education_section", ""),
         raw_text=parsed.get("raw_text", ""),
         message="Resume parsed successfully"
+    )
+
+@app.post("/extract-skills", response_model=SkillExtractionResponse)
+async def extract_skills_endpoint(file: UploadFile = File(...)):
+    """
+    Full pipeline: upload PDF → extract text → parse → extract skills.
+    Returns all recognized skills found in the resume.
+    """
+
+    # Validate
+    if file.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(status_code=400, detail="Only PDF files accepted.")
+
+    content = await file.read()
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="File is empty.")
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File exceeds 5MB limit.")
+
+    # Save
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    save_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(save_path, "wb") as buffer:
+        buffer.write(content)
+
+    # Extract text
+    extraction = extract_text_from_pdf(save_path)
+    if not extraction["success"]:
+        raise HTTPException(status_code=400, detail=extraction["error"])
+
+    # Parse to get skills section
+    parsed = parse_resume(extraction["text"])
+
+    # Extract skills two ways:
+    # 1. Scan the full resume text (catches skills mentioned in projects)
+    skills_full = extract_skills_from_text(extraction["text"])
+
+    # 2. Scan only the skills section (more precise)
+    skills_section = extract_skills_from_section(parsed.get("skills_section", ""))
+
+    return SkillExtractionResponse(
+        filename=file.filename,
+        skills_found=skills_full,
+        skills_from_section=skills_section,
+        total_skills=len(skills_full),
+        message=f"Found {len(skills_full)} skills in resume"
     )

@@ -19,7 +19,7 @@ class ExtractResponse(BaseModel):
     word_count: int
     line_count: int
     char_count: int
-    extracted_text: str         # The full cleaned text
+    extracted_text: str         
     message: str
 
 class ParsedResume(BaseModel):
@@ -33,3 +33,10 @@ class ParsedResume(BaseModel):
     education_section: str = ""
     raw_text: str = ""
     message: str = ""
+
+class SkillExtractionResponse(BaseModel):
+    filename: str
+    skills_found: list[str]          
+    skills_from_section: list[str]   
+    total_skills: int
+    message: str
