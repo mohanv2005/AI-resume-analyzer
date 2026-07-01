@@ -52,3 +52,36 @@ class MatchResponse(BaseModel):
     total_job_skills: int
     total_matched: int
     message: str
+
+class MissingSkillAdvice(BaseModel):
+    skill: str
+    priority: str
+    advice: str
+
+
+class RecommendedProject(BaseModel):
+    title: str
+    description: str
+    skills_covered: list[str]
+
+class AIsuggestions(BaseModel):
+    overall_assessment: str
+    match_quality: str
+    missing_skills_advice: list[MissingSkillAdvice]
+    resume_improvements: list[str]
+    ats_keywords: list[str]
+    recommended_projects: list[RecommendedProject]
+
+class FullAnalysisResponse(BaseModel):
+    filename: str
+    match_percentage: float
+    matched_skills: list[str]
+    missing_skills: list[str]
+    extra_skills: list[str]
+    missing_by_category: dict[str, list[str]]
+    total_resume_skills: int
+    total_job_skills: int
+    total_matched: int
+    ai_suggestions: Optional[AIsuggestions] = None
+    ai_error: Optional[str] = None
+    message: str
