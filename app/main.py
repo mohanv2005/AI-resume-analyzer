@@ -3,7 +3,12 @@ import os
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.models import UploadResponse, ErrorResponse, ExtractResponse, ParsedResume, SkillExtractionResponse, MatchResponse
+from app.ai import get_ai_suggestions
+from app.models import (
+    UploadResponse, ErrorResponse, ExtractResponse,
+    ParsedResume, SkillExtractionResponse, MatchResponse,
+    FullAnalysisResponse, AIsuggestions
+)
 from app.parser import extract_text_from_pdf, get_text_stats, parse_resume
 from app.matcher import extract_skills_from_text, extract_skills_from_section, calculate_match
 
@@ -303,4 +308,75 @@ async def match_resume_endpoint(
 
 
 
-    
+@app.post("/analyze-resume", response_model=FullAnalysisResponse)
+async def analyze_resume_endpoint(
+    file: UploadFile = File(...),
+    job_description: str = Form(...)
+):
+    """
+    Flagship endpoint: upload resume PDF + job description →
+    skill match + AI-powered suggestions.
+    """
+
+    if file.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(status_code=400, detail="Only PDF files accepted.")
+
+    content = await file.read()
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="File is empty.")
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File exceeds 5MB limit.")
+
+    if len(job_description.strip()) < 20:
+        raise HTTPException(
+            status_code=400,
+            detail="Job description too short. Please provide a complete JD."
+        )
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    save_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(save_path, "wb") as buffer:
+        buffer.write(content)
+
+    extraction = extract_text_from_pdf(save_path)
+    if not extraction["success"]:
+        raise HTTPException(status_code=400, detail=extraction["error"])
+
+    parsed = parse_resume(extraction["text"], file_path=save_path)
+
+    resume_skills = extract_skills_from_text(extraction["text"])
+    job_skills = extract_skills_from_text(job_description)
+    match_result = calculate_match(resume_skills, job_skills)
+
+    # AI call is isolated — failure here doesn't crash the endpoint
+    ai_result = get_ai_suggestions(
+        resume_text=extraction["text"],
+        job_description=job_description,
+        match_result=match_result
+    )
+
+    ai_suggestions = None
+    ai_error = None
+
+    if ai_result["success"]:
+        try:
+            ai_suggestions = AIsuggestions(**ai_result["suggestions"])
+        except Exception as e:
+            ai_error = f"AI response structure error: {str(e)}"
+    else:
+        ai_error = ai_result["error"]
+
+    return FullAnalysisResponse(
+        filename=file.filename,
+        match_percentage=match_result["match_percentage"],
+        matched_skills=match_result["matched_skills"],
+        missing_skills=match_result["missing_skills"],
+        extra_skills=match_result["extra_skills"],
+        missing_by_category=match_result["missing_by_category"],
+        total_resume_skills=match_result["total_resume_skills"],
+        total_job_skills=match_result["total_job_skills"],
+        total_matched=match_result["total_matched"],
+        ai_suggestions=ai_suggestions,
+        ai_error=ai_error,
+        message=f"Analysis complete: {match_result['match_percentage']}% match"
+    )
