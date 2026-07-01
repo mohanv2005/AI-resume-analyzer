@@ -40,3 +40,15 @@ class SkillExtractionResponse(BaseModel):
     skills_from_section: list[str]   
     total_skills: int
     message: str
+
+class MatchResponse(BaseModel):
+    filename: str
+    match_percentage: float
+    matched_skills: list[str]
+    missing_skills: list[str]
+    extra_skills: list[str]
+    missing_by_category: dict[str, list[str]]
+    total_resume_skills: int
+    total_job_skills: int
+    total_matched: int
+    message: str
