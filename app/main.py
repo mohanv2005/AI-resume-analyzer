@@ -2,6 +2,8 @@ import os
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from app.ai import get_ai_suggestions
 from app.models import (
@@ -27,6 +29,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 UPLOAD_DIR = "uploads"
 ALLOWED_CONTENT_TYPES = ["application/pdf"]
 MAX_FILE_SIZE = 5 * 1024 * 1024
@@ -38,13 +42,9 @@ def health_check():
         "message": "AI Resume Analyzer is running"
     }
 
-@app.get("/")
+@app.get("/", response_class=FileResponse)
 def root():
-    return {
-        "project": "AI Resume Analyzer",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
+    return FileResponse("static/index.html")
 
 @app.get("/about")
 def about():
@@ -380,3 +380,6 @@ async def analyze_resume_endpoint(
         ai_error=ai_error,
         message=f"Analysis complete: {match_result['match_percentage']}% match"
     )
+
+
+
