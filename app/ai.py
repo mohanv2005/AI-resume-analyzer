@@ -127,48 +127,52 @@ def get_ai_suggestions(
     Returns:
         Dictionary with AI suggestions, or error information
         """
-    try:
-        model = get_gemini_client()
+    max_retries = 2
+    last_error = None
 
-        prompt = build_prompt(resume_text, job_description, match_result)
+    for _ in range(max_retries):
+        try:
+            model = get_gemini_client()
 
-        response = model.chat.completions.create( #actual API call to Gemini
-            model="llama3.2:3b",
-            messages=[{"role": "user", "content": prompt}]
-        )
+            prompt = build_prompt(resume_text, job_description, match_result)
 
-        raw_text = response.choices[0].message.content.strip()
+            response = model.chat.completions.create( #actual API call to Gemini
+                model="llama3.2:3b",
+                messages=[{"role": "user", "content": prompt}]
+            )
 
-        if raw_text.startswith("```"):
-            raw_text = raw_text.split("\n", 1)[1]   # remove first line
-            raw_text = raw_text.rsplit("```", 1)[0]  # remove closing fence
-            raw_text = raw_text.strip()
+            raw_text = response.choices[0].message.content.strip()
 
-        suggestions = json.loads(raw_text)
+            if raw_text.startswith("```"):
+                raw_text = raw_text.split("\n", 1)[1]   # remove first line
+                raw_text = raw_text.rsplit("```", 1)[0]  # remove closing fence
+                raw_text = raw_text.strip()
 
-        return {
-            "success": True,
-            "suggestions": suggestions,
-            "error": None
-        }
-    
-    except ValueError as e:
-        return {
-            "success": False,
-            "suggestions": None,
-            "error": f"Configuration error: {str(e)}"
-        }
-    
-    except json.JSONDecodeError as e:
-        return {
-            "success": False,
-            "suggestions": None,
-            "error": f"AI returned invalid JSON: {str(e)}"
-        }
-    
-    except Exception as e:
-        return {
-            "success": False,
-            "suggestions": None,
-            "error": f"AI service error: {str(e)}"
-        }
+            suggestions = json.loads(raw_text)
+
+            return {
+                "success": True,
+                "suggestions": suggestions,
+                "error": None
+            }
+
+        except ValueError as e:
+            return {
+                "success": False,
+                "suggestions": None,
+                "error": f"Configuration error: {str(e)}"
+            }
+
+        except json.JSONDecodeError as e:
+            last_error = f"AI returned invalid JSON: {str(e)}"
+            continue  # retry
+
+        except Exception as e:
+            last_error = f"AI service error: {str(e)}"
+            continue  # retry
+
+    return {
+        "success": False,
+        "suggestions": None,
+        "error": last_error
+    }
