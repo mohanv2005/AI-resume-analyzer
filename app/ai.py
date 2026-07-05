@@ -17,17 +17,17 @@ def get_gemini_client():
     Raises:
         ValueError: if GEMINI_API_KEY is not set in environment
   """
-  base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-  
-  # Ollama runs locally — no API key needed
-  # base_url points to local Ollama server
-  # api_key="ollama" is a placeholder (Ollama ignores it but OpenAI client requires it)
-  client = OpenAI(
-      base_url=base_url,
-      api_key="ollama"
-  )
+  provider = os.getenv("AI_PROVIDER", "ollama")
 
-  return client
+  if provider == "ollama":
+      base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+      return OpenAI(base_url=base_url, api_key="ollama")
+  else:
+      api_key = os.getenv("OPENROUTER_API_KEY")
+      if not api_key:
+          raise ValueError("OPENROUTER_API_KEY not found")
+      return OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
+
 
 def build_prompt(
     resume_text: str,
