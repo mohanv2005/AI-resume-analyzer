@@ -13,6 +13,7 @@ from app.models import (
 )
 from app.parser import extract_text_from_pdf, get_text_stats, parse_resume
 from app.matcher import extract_skills_from_text, extract_skills_from_section, calculate_match
+from app.extractors import extract_from_file, SUPPORTED_CONTENT_TYPES
 
 
 
@@ -32,7 +33,6 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 UPLOAD_DIR = "uploads"
-ALLOWED_CONTENT_TYPES = ["application/pdf"]
 MAX_FILE_SIZE = 5 * 1024 * 1024
 
 @app.get("/health")
@@ -57,10 +57,10 @@ def about():
 
 @app.post("/upload-resume", response_model=UploadResponse)
 async def upload_resume(file: UploadFile = File(...)):
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
+    if file.content_type not in SUPPORTED_CONTENT_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type: '{file.content_type}'. Only PDF files are accepted."
+            detail="Unsupported file type. Please upload a PDF, DOCX, or TXT file."
         )
 
     content = await file.read()
@@ -101,10 +101,10 @@ async def upload_resume(file: UploadFile = File(...)):
 
 @app.post("/extract-text", response_model=ExtractResponse)
 async def extract_text(file: UploadFile = File(...)):
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
+    if file.content_type not in SUPPORTED_CONTENT_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type '{file.content_type}'. Only PDFs accepted."
+            detail="Unsupported file type. Please upload a PDF, DOCX, or TXT file."
         )
 
     content = await file.read()
@@ -135,7 +135,7 @@ async def extract_text(file: UploadFile = File(...)):
             detail=f"Could not save file: {str(e)}"
         )
 
-    result = extract_text_from_pdf(save_path)
+    result = extract_from_file(save_path)
 
     if not result["success"]:
         raise HTTPException(
@@ -163,8 +163,11 @@ async def parse_resume_endpoint(file: UploadFile = File(...)):
     Returns name, email, phone, LinkedIn, GitHub, and key sections.
     """
 
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
-        raise HTTPException(status_code=400, detail="Only PDF files accepted.")
+    if file.content_type not in SUPPORTED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file type. Please upload a PDF, DOCX, or TXT file."
+        )
     
 
 
@@ -186,7 +189,7 @@ async def parse_resume_endpoint(file: UploadFile = File(...)):
 
 
 
-    extraction = extract_text_from_pdf(save_path)
+    extraction = extract_from_file(save_path)
     if not extraction["success"]:
         raise HTTPException(status_code=400, detail=extraction["error"])
     
@@ -217,8 +220,11 @@ async def extract_skills_endpoint(file: UploadFile = File(...)):
     """
 
     # Validate
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
-        raise HTTPException(status_code=400, detail="Only PDF files accepted.")
+    if file.content_type not in SUPPORTED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file type. Please upload a PDF, DOCX, or TXT file."
+        )
 
     content = await file.read()
     if len(content) == 0:
@@ -233,7 +239,7 @@ async def extract_skills_endpoint(file: UploadFile = File(...)):
         buffer.write(content)
 
     # Extract text
-    extraction = extract_text_from_pdf(save_path)
+    extraction = extract_from_file(save_path)
     if not extraction["success"]:
         raise HTTPException(status_code=400, detail=extraction["error"])
 
@@ -264,8 +270,11 @@ async def match_resume_endpoint(
     Full pipeline: upload resume PDF + job description text → match analysis.
     Returns match percentage, matched/missing/extra skills, and category breakdown.
     """
-     if file.content_type not in ALLOWED_CONTENT_TYPES:
-        raise HTTPException(status_code=400, detail="Only PDF files accepted.")
+     if file.content_type not in SUPPORTED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file type. Please upload a PDF, DOCX, or TXT file."
+        )
      
      content = await file.read()
      if len(content) == 0:
@@ -281,7 +290,7 @@ async def match_resume_endpoint(
      with open(save_path, "wb") as buffer:
         buffer.write(content)
 
-     extraction = extract_text_from_pdf(save_path)
+     extraction = extract_from_file(save_path)
      if not extraction["success"]:
         raise HTTPException(status_code=400, detail=extraction["error"])
      
@@ -318,8 +327,11 @@ async def analyze_resume_endpoint(
     skill match + AI-powered suggestions.
     """
 
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
-        raise HTTPException(status_code=400, detail="Only PDF files accepted.")
+    if file.content_type not in SUPPORTED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file type. Please upload a PDF, DOCX, or TXT file."
+        )
 
     content = await file.read()
     if len(content) == 0:
@@ -338,7 +350,7 @@ async def analyze_resume_endpoint(
     with open(save_path, "wb") as buffer:
         buffer.write(content)
 
-    extraction = extract_text_from_pdf(save_path)
+    extraction = extract_from_file(save_path)
     if not extraction["success"]:
         raise HTTPException(status_code=400, detail=extraction["error"])
 
