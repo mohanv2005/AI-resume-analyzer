@@ -280,19 +280,20 @@ def extract_section(text: str, section_name: str) -> str:
     
     return "\n".join(section_lines).strip()
 
-def parse_resume(text: str, file_path: str = None) -> dict: 
+def parse_resume(text: str, file_path: str = None) -> dict:
     """
-    Master function: extracts all structured information from resume text.
+        Master function: extracts all structured information from resume text.
 
-    This is the function that main.py will call.
-    It combines all individual extractors into one result.
+        This is the function that main.py will call.
+        It combines all individual extractors into one result.
 
-    Args:
-        text: Cleaned text from extract_text_from_pdf()
+        Args:
+            text: Cleaned text from extract_text_from_pdf()
+            file_path: Path to the original file (used for hyperlink extraction)
 
-    Returns:
-        Dictionary with all extracted fields
-    """
+        Returns:
+            Dictionary with all extracted fields
+        """
 
     if not text:
         return {
@@ -306,20 +307,19 @@ def parse_resume(text: str, file_path: str = None) -> dict:
             "education_section": "",
             "raw_text": ""
         }
-    
-    #source 1: extract from text
+
     linkedin_from_text = extract_linkedin_link(text)
     github_from_text = extract_github_link(text)
 
-    #source 2: extract from hyperlinks in PDF annotation layer
     hyperlinks = {}
-    if file_path:
-        hyperlinks = extract_hyperlinks_from_pdf(file_path) 
+    # Only attempt hyperlink extraction for PDF files
+    if file_path and file_path.lower().endswith(".pdf"):
+        hyperlinks = extract_hyperlinks_from_pdf(file_path)
 
     final_linkedin = hyperlinks.get("linkedin") or linkedin_from_text
     final_github = hyperlinks.get("github") or github_from_text
-    
-    return{
+
+    return {
         "name": extract_name(text),
         "email": extract_email(text),
         "phone": extract_phone_number(text),
