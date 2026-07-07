@@ -75,11 +75,13 @@ You have been given the following information about a job application:
 Analyze the resume against the job description and provide specific, actionable suggestions.
 
 IMPORTANT RULES:
+IMPORTANT RULES:
 - Be specific. Reference actual content from the resume.
 - Do not give generic advice like "improve your skills". 
 - Every suggestion must be actionable (the candidate must know exactly what to change).
 - For missing skills, assess whether they are CRITICAL (must have) or NICE TO HAVE.
 - Consider that skill matching is keyword-based and may miss contextual matches.
+- For recommended_projects, DO NOT suggest projects the candidate has already built. Read the resume carefully and only recommend projects that are genuinely new and different from existing ones.
 
 Respond ONLY with a valid JSON object in this exact format (no markdown, no backticks, 
 no explanation outside the JSON):
