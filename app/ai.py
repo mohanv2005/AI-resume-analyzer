@@ -95,7 +95,7 @@ no explanation outside the JSON):
     }}
   ],
   "resume_improvements": [
-    "specific improvement with exact wording suggestions"
+    "Write each improvement as a plain string sentence. Do NOT use objects or keys. Example: 'Add FastAPI to your Skills section under Web Frameworks.'"
   ],
   "ats_keywords": [
     "keyword to add to resume"

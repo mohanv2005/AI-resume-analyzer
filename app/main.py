@@ -360,7 +360,29 @@ async def analyze_resume_endpoint(
 
     if ai_result["success"]:
         try:
-            ai_suggestions = AIsuggestions(**ai_result["suggestions"])
+            raw_suggestions = ai_result["suggestions"]
+
+            # Normalize resume_improvements — flatten dicts to strings if model misbehaved
+            if "resume_improvements" in raw_suggestions:
+                normalized = []
+                for item in raw_suggestions["resume_improvements"]:
+                    if isinstance(item, str):
+                        normalized.append(item)
+                    elif isinstance(item, dict):
+                        normalized.append(" ".join(str(v) for v in item.values()))
+                raw_suggestions["resume_improvements"] = normalized
+
+            # Same normalization for ats_keywords just in case
+            if "ats_keywords" in raw_suggestions:
+                normalized = []
+                for item in raw_suggestions["ats_keywords"]:
+                    if isinstance(item, str):
+                        normalized.append(item)
+                    elif isinstance(item, dict):
+                        normalized.append(" ".join(str(v) for v in item.values()))
+                raw_suggestions["ats_keywords"] = normalized
+
+            ai_suggestions = AIsuggestions(**raw_suggestions)
         except Exception as e:
             ai_error = f"AI response structure error: {str(e)}"
     else:
