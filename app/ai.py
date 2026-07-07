@@ -32,7 +32,8 @@ def get_gemini_client():
 def build_prompt(
     resume_text: str,
     job_description: str,
-    match_result: dict
+    match_result: dict,
+    candidate_name: str = "the candidate"
 ) -> str:
     """
     Building the prompt we send to Gemini.
@@ -63,6 +64,11 @@ with 10 years of experience helping software engineers land jobs at top tech com
 You have been given the following information about a job application:
 
 ---RESUME---
+Candidate Name: {candidate_name}
+
+{resume_text}
+
+---RESUME---
 {resume_text}
 
 ---JOB DESCRIPTION---
@@ -74,7 +80,6 @@ You have been given the following information about a job application:
 ---YOUR TASK---
 Analyze the resume against the job description and provide specific, actionable suggestions.
 
-IMPORTANT RULES:
 IMPORTANT RULES:
 - Be specific. Reference actual content from the resume.
 - Do not give generic advice like "improve your skills". 
@@ -116,7 +121,8 @@ no explanation outside the JSON):
 def get_ai_suggestions(
     resume_text: str,
     job_description: str,
-    match_result: dict
+    match_result: dict,
+    candidate_name: str = "the candidate"
 ) -> str:
     """
      Main function that calls Gemini and returns structured suggestions.
@@ -143,7 +149,7 @@ def get_ai_suggestions(
         try:
             model = get_gemini_client()
 
-            prompt = build_prompt(resume_text, job_description, match_result)
+            prompt = build_prompt(resume_text, job_description, match_result, candidate_name)
 
             response = model.chat.completions.create( #actual API call to Gemini
                 model=model_name,

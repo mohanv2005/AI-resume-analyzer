@@ -56,7 +56,7 @@ function displayResults(data) {
     bar.className = "progress-bar " + getProgressBarColor(pct);
 
     
-    const quality = data.ai_suggestions?.match_quality || deriveQuality(pct);
+    const quality = deriveQuality(pct);
     const badge = document.getElementById("matchQualityBadge");
     badge.textContent = quality.toUpperCase();
     badge.className = "badge fs-6 " + getQualityBadgeColor(quality); 

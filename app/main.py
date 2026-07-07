@@ -348,6 +348,13 @@ async def analyze_resume_endpoint(
     job_skills = extract_skills_from_text(job_description)
     match_result = calculate_match(resume_skills, job_skills)
 
+    ai_result = get_ai_suggestions(
+        resume_text=extraction["text"],
+        job_description=job_description,
+        match_result=match_result,
+        candidate_name=parsed.get("name") or "the candidate"
+    )
+
     # AI call is isolated — failure here doesn't crash the endpoint
     ai_result = get_ai_suggestions(
         resume_text=extraction["text"],
