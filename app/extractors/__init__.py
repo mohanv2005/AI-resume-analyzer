@@ -1,0 +1,1 @@
+from app.extractors.factory import extract_from_file, get_extractor, SUPPORTED_CONTENT_TYPES
