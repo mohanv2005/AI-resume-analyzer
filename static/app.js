@@ -190,21 +190,21 @@ function renderAISuggestions(suggestions) {
 
 
 function showLoading(visible) {
-    const el = document.getElementById("loadingSection");
-    visible ? el.classList.remove("d-none") : el.classList.add("d-none");
+    safeToggle("loadingSection", visible);
 }
 
 function showError(message) {
-    document.getElementById("errorMessage").textContent = message;
-    document.getElementById("errorSection").classList.remove("d-none");
+    const el = document.getElementById("errorMessage");
+    if (el) el.textContent = message;
+    safeToggle("errorSection", true);
 }
 
 function hideError() {
-    document.getElementById("errorSection").classList.add("d-none");
+    safeToggle("errorSection", false);
 }
 
 function hideResults() {
-    document.getElementById("resultsSection").classList.add("d-none");
+    safeToggle("resultsSection", false);
 }
 
 function disableButton(disabled) {
@@ -214,7 +214,7 @@ function disableButton(disabled) {
 }
 
 function show(elementId) {
-    document.getElementById(elementId).classList.remove("d-none");
+    safeToggle(elementId, true);
 }
 
 function getProgressBarColor(pct) {
@@ -236,4 +236,36 @@ function deriveQuality(pct) {
     if (pct >= 70) return "strong";
     if (pct >= 40) return "moderate";
     return "weak";
+}
+
+/**
+ * Safely sets innerHTML on an element.
+ * If the element doesn't exist, logs a warning instead of crashing.
+ *
+ * @param {string} elementId - The ID of the target element
+ * @param {string} html - The HTML content to set
+ */
+function safeSetHTML(elementId, html) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.innerHTML = html;
+    } else {
+        console.warn(`safeSetHTML: element with id "${elementId}" not found in DOM`);
+    }
+}
+
+/**
+ * Safely shows or hides an element by toggling the d-none class.
+ * If the element doesn't exist, logs a warning instead of crashing.
+ *
+ * @param {string} elementId - The ID of the target element
+ * @param {boolean} visible - true to show, false to hide
+ */
+function safeToggle(elementId, visible) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        visible ? el.classList.remove("d-none") : el.classList.add("d-none");
+    } else {
+        console.warn(`safeToggle: element with id "${elementId}" not found in DOM`);
+    }
 }
