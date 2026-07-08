@@ -87,6 +87,24 @@ SKILL_ALIASES = {
     "golang":        "go",
 }
 
+SKILL_SYNONYMS = {
+    "natural language processing": "nlp",
+    "machine learning": "ml",
+    "deep learning": "dl",
+    "artificial intelligence": "ai",
+    "continuous integration": "ci/cd",
+    "continuous deployment": "ci/cd",
+    "continuous integration/continuous deployment": "ci/cd",
+    "object oriented programming": "oop",
+    "object-oriented programming": "oop",
+    "rest api": "rest apis",
+    "restful api": "rest apis",
+    "restful apis": "rest apis",
+    "large language model": "llm",
+    "large language models": "llm",
+    "computer vision": "cv",
+    "reinforcement learning": "rl",
+}
 
 def get_all_skills() -> set:
     """
@@ -112,6 +130,7 @@ def normalize_skill(skill: str) -> str:
     - Lowercase
     - Strip whitespace
     - Resolve aliases
+    - Resolve synonyms to canonical form
 
     Args:
         skill: Raw skill string
@@ -121,7 +140,9 @@ def normalize_skill(skill: str) -> str:
     """
     normalized = skill.lower().strip()
 
-    return SKILL_ALIASES.get(normalized, normalized)
+    resolved = SKILL_ALIASES.get(normalized, normalized)
+
+    return SKILL_SYNONYMS.get(resolved, resolved)
 
 
 def get_skill_category(skill: str) -> str:
