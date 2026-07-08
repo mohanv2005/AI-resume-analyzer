@@ -3,6 +3,9 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from app import providers
+from app.providers.factory import get_provider, SUPPORTED_PROVIDERS
+
 load_dotenv()  
 
 def get_gemini_client():
@@ -138,25 +141,16 @@ def get_ai_suggestions(
     max_retries = 2
     last_error = None
 
-    # Read provider and model from environment — fully dynamic now
-    provider = os.getenv("AI_PROVIDER", "ollama")
-    if provider == "ollama":
-        model_name = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
-    else:
-        model_name = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.2-3b-instruct:free")
-
+    
     for _ in range(max_retries):
         try:
-            model = get_gemini_client()
+            provider = get_provider()
 
             prompt = build_prompt(resume_text, job_description, match_result, candidate_name)
 
-            response = model.chat.completions.create( #actual API call to Gemini
-                model=model_name,
-                messages=[{"role": "user", "content": prompt}]
-            )
 
-            raw_text = response.choices[0].message.content.strip()
+
+            raw_text = provider.generate(prompt)
 
             if raw_text.startswith("```"):
                 raw_text = raw_text.split("\n", 1)[1]   # remove first line
