@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional
 
 class UploadResponse(BaseModel):
@@ -71,6 +71,46 @@ class AIsuggestions(BaseModel):
     resume_improvements: list[str]
     ats_keywords: list[str]
     recommended_projects: list[RecommendedProject]
+
+    @field_validator("recommended_projects", mode="before")
+    @classmethod
+    def wrap_dict_in_list(cls, v):
+        """
+        If the AI returns a single dict instead of a list of dicts,
+        wrap it in a list automatically.
+
+        Example:
+            AI returns: {"title": "...", "description": "...", "skills_covered": [...]}
+            We convert: [{"title": "...", "description": "...", "skills_covered": [...]}]
+        """
+        if isinstance(v, dict):
+            return [v]
+        return v
+
+    @field_validator("missing_skills_advice", mode="before")
+    @classmethod
+    def wrap_advice_dict_in_list(cls, v):
+        """Same protection for missing_skills_advice."""
+        if isinstance(v, dict):
+            return [v]
+        return v
+
+    @field_validator("resume_improvements", "ats_keywords", mode="before")
+    @classmethod
+    def normalize_string_lists(cls, v):
+        """
+        If items are dicts instead of strings, extract their values.
+        Handles cases where AI returns {"improvement": "..."} instead of "..."
+        """
+        if not isinstance(v, list):
+            return v
+        normalized = []
+        for item in v:
+            if isinstance(item, str):
+                normalized.append(item)
+            elif isinstance(item, dict):
+                normalized.append(" ".join(str(val) for val in item.values()))
+        return normalized
 
 class FullAnalysisResponse(BaseModel):
     filename: str
