@@ -73,6 +73,8 @@ SKILL_ALIASES = {
     "py":            "python",
     "ml":            "machine learning",
     "dl":            "deep learning",
+    "cv":            "computer vision",
+    "rl":            "reinforcement learning",
     "k8s":           "kubernetes",
     "gcp":           "google cloud",
     "postgres":      "postgresql",
@@ -89,21 +91,16 @@ SKILL_ALIASES = {
 
 SKILL_SYNONYMS = {
     "natural language processing": "nlp",
-    "machine learning": "ml",
-    "deep learning": "dl",
     "artificial intelligence": "ai",
     "continuous integration": "ci/cd",
     "continuous deployment": "ci/cd",
     "continuous integration/continuous deployment": "ci/cd",
     "object oriented programming": "oop",
     "object-oriented programming": "oop",
-    "rest api": "rest apis",
     "restful api": "rest apis",
     "restful apis": "rest apis",
     "large language model": "llm",
     "large language models": "llm",
-    "computer vision": "cv",
-    "reinforcement learning": "rl",
 }
 
 def get_all_skills() -> set:
